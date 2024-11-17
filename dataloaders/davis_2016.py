@@ -14,7 +14,7 @@ class DAVIS2016(Dataset):
 
     def __init__(self, train=True,
                  inputRes=None,
-                 db_root_dir='/media/eec/external/Databases/Segmentation/DAVIS-2016',
+                 db_root_dir='/home/chenjian/dataset/DAVIS',
                  transform=None,
                  meanval=(104.00699, 116.66877, 122.67892),
                  seq_name=None):
@@ -34,6 +34,7 @@ class DAVIS2016(Dataset):
             fname = 'val_seqs'
 
         if self.seq_name is None:
+            # print(os.path.join(db_root_dir, fname + '.txt'))
 
             # Initialize the original DAVIS splits for training the parent network
             with open(os.path.join(db_root_dir, fname + '.txt')) as f:
@@ -42,8 +43,11 @@ class DAVIS2016(Dataset):
                 labels = []
                 for seq in seqs:
                     images = np.sort(os.listdir(os.path.join(db_root_dir, 'JPEGImages/480p/', seq.strip())))
+                    # [00000.jpg ,00001.jpg ,......]
                     images_path = list(map(lambda x: os.path.join('JPEGImages/480p/', seq.strip(), x), images))
+                    # [每一张图片的具体路径]
                     img_list.extend(images_path)
+                    # [bear序列所有图片的路径 ,..., ......]
                     lab = np.sort(os.listdir(os.path.join(db_root_dir, 'Annotations/480p/', seq.strip())))
                     lab_path = list(map(lambda x: os.path.join('Annotations/480p/', seq.strip(), x), lab))
                     labels.extend(lab_path)
@@ -51,11 +55,15 @@ class DAVIS2016(Dataset):
 
             # Initialize the per sequence images for online training
             names_img = np.sort(os.listdir(os.path.join(db_root_dir, 'JPEGImages/480p/', str(seq_name))))
+            # [00000.jpg ,......]
             img_list = list(map(lambda x: os.path.join('JPEGImages/480p/', str(seq_name), x), names_img))
+            # [每一张图片的具体路径]
             name_label = np.sort(os.listdir(os.path.join(db_root_dir, 'Annotations/480p/', str(seq_name))))
             labels = [os.path.join('Annotations/480p/', str(seq_name), name_label[0])]
             labels.extend([None]*(len(names_img)-1))
+            # 用来确保labels和names_img长度相等
             if self.train:
+            # 训练模式，只使用第一张图片。
                 img_list = [img_list[0]]
                 labels = [labels[0]]
 
@@ -63,6 +71,8 @@ class DAVIS2016(Dataset):
 
         self.img_list = img_list
         self.labels = labels
+        # 若seq_name = None ,则img_list应为[bear序列所有图片的路径 ,..., ......]
+        # 若seq_name = blackswan ,则img_list应为[/.../blackswan/00000.jpg],labels同理
 
         print('Done initializing ' + fname + ' Dataset')
 
@@ -71,11 +81,13 @@ class DAVIS2016(Dataset):
 
     def __getitem__(self, idx):
         img, gt = self.make_img_gt_pair(idx)
+        # 若若seq_name = None ,
 
         sample = {'image': img, 'gt': gt}
 
         if self.seq_name is not None:
             fname = os.path.join(self.seq_name, "%05d" % idx)
+            # blackswan/00000
             sample['fname'] = fname
 
         if self.transform is not None:
@@ -87,16 +99,22 @@ class DAVIS2016(Dataset):
         """
         Make the image-ground-truth pair
         """
+        # 若seq_name不是none,则应该包含所有图片
         img = cv2.imread(os.path.join(self.db_root_dir, self.img_list[idx]))
+        # print( self.img_list[idx])
+        # print(os.path.join(self.db_root_dir, self.img_list[idx]))
+        # 若seq_name不是none，那这里的idx只能为0，也就是说数据集里只有一对图片，6，这应该是微调时候用的？
         if self.labels[idx] is not None:
             label = cv2.imread(os.path.join(self.db_root_dir, self.labels[idx]), 0)
         else:
             gt = np.zeros(img.shape[:-1], dtype=np.uint8)
 
         if self.inputRes is not None:
-            img = imresize(img, self.inputRes)
+            # img = imresize(img, self.inputRes)
+            img = resize(img, self.inputRes)
             if self.labels[idx] is not None:
-                label = imresize(label, self.inputRes, interp='nearest')
+                # label = imresize(label, self.inputRes, interp='nearest')
+                label = resize(label, self.inputRes, interp='nearest')
 
         img = np.array(img, dtype=np.float32)
         img = np.subtract(img, np.array(self.meanval, dtype=np.float32))
@@ -121,7 +139,7 @@ if __name__ == '__main__':
 
     transforms = transforms.Compose([tr.RandomHorizontalFlip(), tr.Resize(scales=[0.5, 0.8, 1]), tr.ToTensor()])
 
-    dataset = DAVIS2016(db_root_dir='/media/eec/external/Databases/Segmentation/DAVIS-2016',
+    dataset = DAVIS2016(db_root_dir='/home/chenjian/dataset/DAVIS',
                         train=True, transform=transforms)
     dataloader = torch.utils.data.DataLoader(dataset, batch_size=1, shuffle=True, num_workers=1)
 

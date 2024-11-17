@@ -1,0 +1,9 @@
+{
+  "editor.fontSize": 18,
+  "debug.console.fontSize": 18,
+  "terminal.integrated.fontSize": 18,
+  "chat.editor.fontSize": 16,
+  "scm.inputFontSize": 14,
+  "editor.minimap.sectionHeaderFontSize": 14,
+  "git.ignoreLimitWarning": true
+}

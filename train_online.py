@@ -31,14 +31,14 @@ else:
 
 db_root_dir = Path.db_root_dir()
 save_dir = Path.save_root_dir()
-
+# ./models
 if not os.path.exists(save_dir):
     os.makedirs(os.path.join(save_dir))
 
 vis_net = 0  # Visualize the network?
-vis_res = 0  # Visualize the results?
+vis_res = 1  # Visualize the results?
 nAveGrad = 5  # Average the gradient every nAveGrad iterations
-nEpochs = 2000 * nAveGrad  # Number of epochs for training
+nEpochs = 100 * nAveGrad  # Number of epochs for training
 snapshot = nEpochs  # Store a model every snapshot epochs
 parentEpoch = 240
 
@@ -52,9 +52,11 @@ parentModelName = 'parent'
 # Select which GPU, -1 if CPU
 gpu_id = 0
 device = torch.device("cuda:"+str(gpu_id) if torch.cuda.is_available() else "cpu")
+print(f'————device ：{device}————')
 
 # Network definition
 net = vo.OSVOS(pretrained=0)
+# ./models/parent_epoch-239.pth
 net.load_state_dict(torch.load(os.path.join(save_dir, parentModelName+'_epoch-'+str(parentEpoch-1)+'.pth'),
                                map_location=lambda storage, loc: storage))
 
@@ -103,6 +105,7 @@ testloader = DataLoader(db_test, batch_size=1, shuffle=False, num_workers=1)
 
 num_img_tr = len(trainloader)
 num_img_ts = len(testloader)
+print('_____________num:'+str(num_img_tr))
 loss_tr = []
 aveGrad = 0
 
