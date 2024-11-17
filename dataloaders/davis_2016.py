@@ -3,7 +3,8 @@ from __future__ import division
 import os
 import numpy as np
 import cv2
-from scipy.misc import imresize
+# from scipy.misc import imresize
+from skimage.transform import resize 
 
 from dataloaders.helpers import *
 from torch.utils.data import Dataset

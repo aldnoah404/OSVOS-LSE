@@ -22,6 +22,7 @@ import networks.vgg_osvos as vo
 from layers.osvos_layers import class_balanced_cross_entropy_loss
 from dataloaders.helpers import *
 from mypath import Path
+import imageio
 
 # Setting of parameters
 if 'SEQ_NAME' not in os.environ.keys():
@@ -189,7 +190,11 @@ with torch.no_grad():  # PyTorch 0.4.0 style
             pred = np.squeeze(pred)
 
             # Save the result, attention to the index jj
-            sm.imsave(os.path.join(save_dir_res, os.path.basename(fname[jj]) + '.png'), pred)
+            # sm.imsave(os.path.join(save_dir_res, os.path.basename(fname[jj]) + '.png'), pred)
+            pred_float = np.clip(pred, 0, 255)  # 确保值在 0-255 之间  
+            pred_uint8 = pred_float.astype(np.uint8)  # 转换为无符号8位整型  
+
+            imageio.imwrite(os.path.join(save_dir_res, os.path.basename(fname[jj]) + '.png'), pred_uint8)  
 
             if vis_res:
                 img_ = np.transpose(img.numpy()[jj, :, :, :], (1, 2, 0))
