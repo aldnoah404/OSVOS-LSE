@@ -17,6 +17,7 @@ from torch.utils.data import DataLoader
 from util import visualize as viz
 from dataloaders import davis_2016 as db
 from dataloaders import custom_transforms as tr
+from dataloaders import lse 
 import networks.vgg_osvos as vo
 from layers.osvos_layers import class_balanced_cross_entropy_loss
 from mypath import Path
@@ -40,7 +41,7 @@ nEpochs = 240  # Number of epochs for training (500.000/2079)
 useTest = True  # See evolution of the test set when training?
 testBatch = 1  # Testing Batch
 nTestInterval = 5  # Run on test set every nTestInterval epochs
-db_root_dir = Path.db_root_dir()
+db_root_dir = Path.db_root_dir() # ./Data
 vis_net = 0  # Visualize the network?
 snapshot = 40  # Store a model every snapshot epochs
 nAveGrad = 10
@@ -109,11 +110,11 @@ composed_transforms = transforms.Compose([tr.RandomHorizontalFlip(),
                                           tr.ScaleNRotate(rots=(-30, 30), scales=(.75, 1.25)),
                                           tr.ToTensor()])
 # Training dataset and its iterator
-db_train = db.DAVIS2016(train=True, inputRes=None, db_root_dir=db_root_dir, transform=composed_transforms)
+db_train = lse.LSE(train=True, inputRes=None, db_root_dir=db_root_dir, transform=composed_transforms)
 trainloader = DataLoader(db_train, batch_size=p['trainBatch'], shuffle=True, num_workers=2)
 
 # Testing dataset and its iterator
-db_test = db.DAVIS2016(train=False, db_root_dir=db_root_dir, transform=tr.ToTensor())
+db_test = lse.LSE(train=False, db_root_dir=db_root_dir, transform=tr.ToTensor())
 testloader = DataLoader(db_test, batch_size=testBatch, shuffle=False, num_workers=2)
 
 num_img_tr = len(trainloader)

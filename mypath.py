@@ -4,7 +4,7 @@ from util.path_abstract import PathAbstract
 class Path(PathAbstract):
     @staticmethod
     def db_root_dir():
-        return '/home/chenjian/dataset/DAVIS'
+        return './Data'
 
     @staticmethod
     def save_root_dir():

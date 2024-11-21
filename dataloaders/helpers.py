@@ -35,7 +35,7 @@ def overlay_mask(im, ma, color=np.array([255, 0, 0])/255.0):
 
     return bg
 
-
+# 对像素值作归一化处理，调整到0-1之间
 def im_normalize(im):
     """
     Normalize image
