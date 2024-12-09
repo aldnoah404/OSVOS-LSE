@@ -45,7 +45,7 @@ db_root_dir = Path.db_root_dir() # ./Data
 vis_net = 0  # Visualize the network?
 snapshot = 40  # Store a model every snapshot epochs
 nAveGrad = 10
-load_caffe_vgg = True
+load_caffe_vgg = True # 选择加载Pytorch_vgg
 save_dir = Path.save_root_dir()
 if not os.path.exists(save_dir):
     os.makedirs(os.path.join(save_dir))
@@ -57,7 +57,7 @@ if resume_epoch == 0:
         net = vo.OSVOS(pretrained=2)
     else:
         net = vo.OSVOS(pretrained=1)
-else:
+else: # 如果不重新开始训练，也就没必要初始化权重
     net = vo.OSVOS(pretrained=0)
     print("Updating weights from: {}".format(
         os.path.join(save_dir, modelName + '_epoch-' + str(resume_epoch - 1) + '.pth')))
@@ -67,7 +67,7 @@ else:
 
 
 # Logging into Tensorboard
-log_dir = os.path.join(save_dir, 'runs', datetime.now().strftime('%b%d_%H-%M-%S') + '_' + socket.gethostname())
+log_dir = os.path.join(save_dir, 'runs', 'parent-train', datetime.now().strftime('%b%d_%H-%M-%S') + '_' + socket.gethostname())
 writer = SummaryWriter(log_dir=log_dir, comment='-parent')
 
 net.to(device)  # PyTorch 0.4.0 style
@@ -119,7 +119,7 @@ testloader = DataLoader(db_test, batch_size=testBatch, shuffle=False, num_worker
 
 num_img_tr = len(trainloader)
 num_img_ts = len(testloader)
-running_loss_tr = [0] * 5
+running_loss_tr = [0] * 5 # [0, 0, 0, 0, 0]
 running_loss_ts = [0] * 5
 loss_tr = []
 loss_ts = []
@@ -141,6 +141,7 @@ for epoch in range(resume_epoch, nEpochs):
         outputs = net.forward(inputs)
 
         # Compute the losses, side outputs and fuse
+        # print(len(outputs))
         losses = [0] * len(outputs)
         for i in range(0, len(outputs)):
             losses[i] = class_balanced_cross_entropy_loss(outputs[i], gts, size_average=False)
@@ -173,8 +174,11 @@ for epoch in range(resume_epoch, nEpochs):
             aveGrad = 0
 
     # Save the model
+    save_paras_path = os.path.join(save_dir, 'parent_paras')
+    if not os.path.exists(save_paras_path):
+        os.makedirs(save_paras_path)
     if (epoch % snapshot) == snapshot - 1 and epoch != 0:
-        torch.save(net.state_dict(), os.path.join(save_dir, modelName + '_epoch-' + str(epoch) + '.pth'))
+        torch.save(net.state_dict(), os.path.join(save_paras_path, modelName + '_epoch-' + str(epoch) + '.pth'))
 
     # One testing epoch
     if useTest and epoch % nTestInterval == (nTestInterval - 1):

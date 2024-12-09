@@ -14,7 +14,7 @@ from mypath import Path
 
 
 class OSVOS(nn.Module):
-    def __init__(self, pretrained=1):
+    def __init__(self, pretrained=0):
         super(OSVOS, self).__init__()
         lay_list = [[64, 64],
                     ['M', 128, 128],

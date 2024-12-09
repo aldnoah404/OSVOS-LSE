@@ -19,7 +19,7 @@ class LSE(Dataset):
 
     def __init__(self, train=True,
                  inputRes=None,
-                 db_root_dir='./Data',
+                 db_root_dir='/home/chenjian/dataset/seqsdatasets/毕业设计试验程序及结果/dataset/Youtube-VOS/Youtube-VOS',
                  transform=None,
                  seq_name=None):
         """Loads image to label pairs for tool pose estimation
@@ -33,9 +33,9 @@ class LSE(Dataset):
         self.meanval = get_meanval()
 
         if self.train:
-            fname = 'train_seq'
+            fname = 'train'
         else:
-            fname = 'test_seq'
+            fname = 'valid'
 
         if self.seq_name is None:
             # print(os.path.join(db_root_dir, fname + '.txt'))
@@ -46,25 +46,26 @@ class LSE(Dataset):
                 img_list = []
                 labels = []
                 for seq in seqs:
-                    images = np.sort(os.listdir(os.path.join(db_root_dir, 'preDataset/inputs/', seq.strip())))
+                    images = np.sort(os.listdir(os.path.join(db_root_dir, 'all/JPEGImages/', seq.strip())))
                     # [00000.jpg ,00001.jpg ,......]
-                    images_path = list(map(lambda x: os.path.join('preDataset/inputs/', seq.strip(), x), images))
+                    images_path = list(map(lambda x: os.path.join('all/JPEGImages/', seq.strip(), x), images))
                     # [每一张图片的具体路径]
                     img_list.extend(images_path)
                     # [bear序列所有图片的路径 ,..., ......]
-                    lab = np.sort(os.listdir(os.path.join(db_root_dir, 'preDataset/targets/', seq.strip())))
-                    lab_path = list(map(lambda x: os.path.join('preDataset/targets/', seq.strip(), x), lab))
+                    lab = np.sort(os.listdir(os.path.join(db_root_dir, 'all/Annotations/', seq.strip())))
+                    lab_path = list(map(lambda x: os.path.join('all/Annotations/', seq.strip(), x), lab))
                     labels.extend(lab_path)
         else:
 
             # Initialize the per sequence images for online training
-            names_img = np.sort(os.listdir(os.path.join(db_root_dir, 'preDataset/inputs/', str(seq_name))))
+            names_img = np.sort(os.listdir(os.path.join(db_root_dir, 'all/JPEGImages/', str(seq_name))))
             # [00000.jpg ,......]
-            img_list = list(map(lambda x: os.path.join('preDataset/inputs/', str(seq_name), x), names_img))
+            img_list = list(map(lambda x: os.path.join('all/JPEGImages/', str(seq_name), x), names_img))
             # [每一张图片的具体路径]
-            name_label = np.sort(os.listdir(os.path.join(db_root_dir, 'preDataset/targets/', str(seq_name))))
-            labels = [os.path.join('preDataset/targets/', str(seq_name), name_label[0])]
-            labels.extend([None]*(len(names_img)-1))
+            name_label = np.sort(os.listdir(os.path.join(db_root_dir, 'all/Annotations/', str(seq_name))))
+            labels = list(map(lambda x: os.path.join('all/Annotations/', str(seq_name), x), name_label))
+            # labels = [os.path.join('all/Annotations/', str(seq_name), name_label[0])]
+            # labels.extend([None]*(len(names_img)-1))
             # 用来确保labels和names_img长度相等
             if self.train:
             # 训练模式，只使用第一张图片。
@@ -366,7 +367,7 @@ def dataset_prepare(proto_input_path,proto_target_path,name,threshold):
             cv2.imwrite(save_path, morphological_image)
     print("处理完成")
 
-def get_meanval(image_path = './Data/preDataset/inputs'):
+def get_meanval(image_path = '/home/chenjian/dataset/seqsdatasets/毕业设计试验程序及结果/dataset/Youtube-VOS/Youtube-VOS/all/JPEGImages'):
     # 初始化累加器的值
     sum_pixel_values = 0  # 灰度图像的像素值总和  
     num_pixels = 0  # 总像素数量 

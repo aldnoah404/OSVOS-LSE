@@ -15,6 +15,7 @@ from torch.utils.data import DataLoader
 
 # Custom includes
 from dataloaders import davis_2016 as db
+from dataloaders import lse
 from dataloaders import custom_transforms as tr
 from util import visualize as viz
 import scipy.misc as sm
@@ -26,7 +27,7 @@ import imageio
 
 # Setting of parameters
 if 'SEQ_NAME' not in os.environ.keys():
-    seq_name = 'blackswan'
+    seq_name = '0B820_4'
 else:
     seq_name = str(os.environ['SEQ_NAME'])
 
@@ -59,7 +60,7 @@ print(f'————device ：{device}————')
 net = vo.OSVOS(pretrained=0)
 # ./models/parent_epoch-239.pth
 net.load_state_dict(torch.load(os.path.join(save_dir, parentModelName+'_epoch-'+str(parentEpoch-1)+'.pth'),
-                               map_location=lambda storage, loc: storage))
+                               map_location=lambda storage, loc: storage, weights_only=True))
 
 # Logging into Tensorboard
 log_dir = os.path.join(save_dir, 'runs', datetime.now().strftime('%b%d_%H-%M-%S') + '_' + socket.gethostname()+'-'+seq_name)
@@ -96,11 +97,11 @@ composed_transforms = transforms.Compose([tr.RandomHorizontalFlip(),
                                           tr.ScaleNRotate(rots=(-30, 30), scales=(.75, 1.25)),
                                           tr.ToTensor()])
 # Training dataset and its iterator
-db_train = db.DAVIS2016(train=True, db_root_dir=db_root_dir, transform=composed_transforms, seq_name=seq_name)
+db_train = lse.LSE(train=True, db_root_dir=db_root_dir, transform=composed_transforms, seq_name=seq_name)
 trainloader = DataLoader(db_train, batch_size=p['trainBatch'], shuffle=True, num_workers=1)
 
 # Testing dataset and its iterator
-db_test = db.DAVIS2016(train=False, db_root_dir=db_root_dir, transform=tr.ToTensor(), seq_name=seq_name)
+db_test = lse.LSE(train=False, db_root_dir=db_root_dir, transform=tr.ToTensor(), seq_name=seq_name)
 testloader = DataLoader(db_test, batch_size=1, shuffle=False, num_workers=1)
 
 
@@ -198,8 +199,10 @@ with torch.no_grad():  # PyTorch 0.4.0 style
 
             if vis_res:
                 img_ = np.transpose(img.numpy()[jj, :, :, :], (1, 2, 0))
+                print(gt.shape)
                 gt_ = np.transpose(gt.numpy()[jj, :, :, :], (1, 2, 0))
                 gt_ = np.squeeze(gt)
+                print(gt_.shape)
                 # Plot the particular example
                 ax_arr[0].cla()
                 ax_arr[1].cla()
@@ -207,9 +210,9 @@ with torch.no_grad():  # PyTorch 0.4.0 style
                 ax_arr[0].set_title('Input Image')
                 ax_arr[1].set_title('Ground Truth')
                 ax_arr[2].set_title('Detection')
-                ax_arr[0].imshow(im_normalize(img_))
-                ax_arr[1].imshow(gt_)
-                ax_arr[2].imshow(im_normalize(pred))
-                plt.pause(0.001)
+                ax_arr[0].imshow(im_normalize(img_), cmap='gray')
+                ax_arr[1].imshow(gt_, cmap='gray')
+                ax_arr[2].imshow(im_normalize(pred), cmap='gray')
+                plt.pause(0.5)
 
 writer.close()
